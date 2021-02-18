@@ -1,0 +1,19 @@
+{
+	"React Arrow Function": {
+		"prefix": "rafc",
+		"body": [
+		  "import React from 'react';",
+		  "",
+		  "const ${1:FuncCmp}= ()=>{",
+		  "    return (",
+		  "        <div>",
+		  "            ",
+		  "        </div>",
+		  "    )",
+		  "};",
+		  "",
+		  "export default ${1:FolderName};"
+		],
+		"description": "React Arrow FuncCmp"
+	  }
+}

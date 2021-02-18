@@ -1,44 +1,52 @@
-import React from "react";
+import { observer } from "mobx-react";
+import React, {  useContext } from "react";
+import { Link } from "react-router-dom";
 import { Button, Item, Label, List, Segment } from "semantic-ui-react";
-import { IActivity } from "../../../app/models/activities";
+import ActivityStore from "../../../app/stores/activityStore";
 
-interface IProps {
-  activities: IActivity[];
-  onSelected: (id: string) => void;
-  onDelete: (id: string) => void;
-}
-
-const ActivitiyList: React.FC<IProps> = ({ activities, onSelected ,onDelete}) => {
+const ActivitiyList: React.FC = ({}) => {
+  const activityStore = useContext(ActivityStore);
+  const {
+    deleteActivity: onDelete,
+    deleteFetched,
+    deleteSubmiting,
+    targets,
+    activitiesByDate
+  } = activityStore;
   return (
     <Segment clearing>
       <Item.Group divided>
         <List>
-          {activities.map((activitiy) => {
+          {activitiesByDate.map((activitiy) => {
             return (
-              <Item>
+              <Item key={activitiy.id}>
                 <Item.Content>
                   <Item.Header as="a">{activitiy.title}</Item.Header>
                   <Item.Meta>{activitiy.date}</Item.Meta>
                   <Item.Description>
                     <div>{activitiy.description}</div>
-                    <div>
-                      {activitiy.city} , {activitiy.venue}
-                    </div>
+                    <div>{activitiy.city} , {activitiy.venue}</div>
                   </Item.Description>
                   <Item.Extra>
                     <Button
-                      onClick={() => onSelected(activitiy.id)}
+                      as={Link} 
+                      to={`/activities/${activitiy.id}`}
                       floated="right"
                       content="View"
                       color="purple"
                     />
                     <Button
-                      onClick={() => onDelete(activitiy.id)}
+                      name={activitiy.id}
+                      loading={activitiy.id === targets && deleteSubmiting}
+                      onClick={(e) => {
+                        deleteFetched();
+                        onDelete(e, activitiy.id);
+                      }}
                       floated="right"
                       content="Delete"
                       color="red"
                     />
-                    
+
                     <Label basic>{activitiy.category}</Label>
                   </Item.Extra>
                 </Item.Content>
@@ -51,4 +59,4 @@ const ActivitiyList: React.FC<IProps> = ({ activities, onSelected ,onDelete}) =>
   );
 };
 
-export default ActivitiyList;
+export default observer(ActivitiyList);

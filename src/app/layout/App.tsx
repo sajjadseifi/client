@@ -1,92 +1,48 @@
-import React, { useState, useEffect } from "react";
+import React, {  useEffect, useContext } from "react";
 import "semantic-ui-css/semantic.min.css";
-import axios from "axios";
-import { IActivity } from "../models/activities";
 import NavBar from "../../features/nav/NavBar";
 import { Container } from "semantic-ui-react";
+import LoadingComponent from "./LoadingComponent";
+import ActivityStore from "../stores/activityStore";
+import { observer } from "mobx-react-lite";
 import ActivitiyDashboard from "../../features/activity/dashboard/ActivityDashboard";
+import { withRouter, Route, RouteComponentProps } from "react-router-dom";
+import HomePage from "../../features/home/HomePage";
+import ActivityForm from "../../features/activity/form/ActivityForm";
+import ActivityDitales from "../../features/activity/details/ActivityDitales";
 
-function App() {
-  const ACTIVITIES_API = "http://localhost:5000/api/Activities";
+const App: React.FC<RouteComponentProps> = ({ location }) => {
+  const activityStore = useContext(ActivityStore);
 
-  const [activities, setActivities] = useState<IActivity[]>([]);
-  const [selectedActivity, setSelectedActivity] = useState<IActivity | null>(
-    null
-  );
-  const [editMode, setEditMode] = useState(false);
-
-  const selectedActivitiesHandelr = (id: string) => {
-    setEditMode(false);
-    setSelectedActivity(activities.find((activity) => activity.id === id)!);
-  };
-  const cancelledHandler = () => {
-    setSelectedActivity(null);
-  };
-  const cancelledEditHandler = () => {
-    setEditMode(false);
-  };
-
-  const onOpenCreateFormHandler = () => {
-    setSelectedActivity(null);
-    setEditMode(true);
-  };
-  const createActivityHandler = (activity: IActivity) => {
-    setActivities([activity, ...activities]);
-    setSelectedActivity(activity);
-    setEditMode(false);
-  };
-  const deleteActivityHandler = (id: string) => {
-    setActivities([...activities.filter((activity) => activity.id !== id)]);
-    if(selectedActivity && selectedActivity.id === id){
-      setSelectedActivity(null);
-      setEditMode(false); 
-    }
-  };
-  const editActivityHandler = (activity: IActivity) => {
-    setActivities([
-      activity,
-      ...activities.filter((ac) => ac.id !== activity.id),
-    ]);
-    setSelectedActivity(activity);
-    setEditMode(false);
-  };
   useEffect(() => {
-    loadActivities();
-  }, []);
+    activityStore.loadActivities();
+  }, [activityStore]);
 
-  async function loadActivities(): Promise<void> {
-    try {
-      const response = await axios.get<IActivity[]>(ACTIVITIES_API);
-      let activities: IActivity[] = [];
-      response.data.forEach((activity) => {
-        activity.date = activity.date.split(".")[0];
-        activities.push(activity);
-      });
-      setActivities(response.data);
-    } catch (err) {
-      setActivities([]);
-    }
-  }
+  if (activityStore.loadingInital)
+    return <LoadingComponent content={"Loading Activities..."} />;
 
   return (
     <>
-      <NavBar onOpenCreateForm={onOpenCreateFormHandler} />
-      <Container style={{ marginTop: "7em" }}>
-        <ActivitiyDashboard
-          activities={activities}
-          selectActivity={selectedActivitiesHandelr}
-          selectedActivity={selectedActivity!}
-          cancelled={cancelledHandler}
-          editMode={editMode}
-          setEditMode={setEditMode}
-          cancelledEdit={cancelledEditHandler}
-          onCreate={createActivityHandler}
-          onEdit={editActivityHandler}
-          onDelete={deleteActivityHandler}
-        />
-      </Container>
+      <Route exact path="/" component={HomePage} />
+      <Route
+        path={"/(.+)"}
+        render={() => (
+          <>
+            <NavBar />
+            <Container style={{ marginTop: "7em" }}>
+              <Route exact path="/activities" component={ActivitiyDashboard} />
+              <Route path="/activities/:id" component={ActivityDitales} />
+              <Route
+                key={location.key}
+                path={["/create-activities", "/manage/:id"]}
+                component={ActivityForm}
+              />
+            </Container>
+          </>
+        )}
+      />
     </>
   );
-}
+};
 
-export default App;
+export default withRouter(observer(App));

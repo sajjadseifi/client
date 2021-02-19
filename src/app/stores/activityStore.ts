@@ -2,27 +2,43 @@ import { action, computed, makeObservable, observable } from 'mobx';
 import { createContext, SyntheticEvent } from 'react';
 import { IActivity } from '../models/activities';
 import * as agent from "../api/agent";
-
+interface IActivityKey {
+    [key: string]: IActivity[];
+}
 class ActivityStore {
     @observable title = "Home From Mobx";
     @observable errorMessage = "";
     @observable activitiesRegistered = new Map();
     @observable activities: IActivity[] = [];
     @observable loadingInital = false;
-    @observable selectedActivity: IActivity | null= null;
+    @observable selectedActivity: IActivity | null = null;
     @observable submitting = false;
     @observable deleteSubmiting = false;
     @observable targets = "";
 
-    
+
     constructor() {
         makeObservable(this);
     }
-    @action clearingActivity =()=>{
-        this.selectedActivity=null;
+    @action clearingActivity = () => {
+        this.selectedActivity = null;
     }
     @computed get activitiesByDate() {
-        return Array.from(this.activitiesRegistered.values());//.sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
+        return this.groupActivitiesByDate(Array.from(this.activitiesRegistered.values()));
+    }
+    groupActivitiesByDate = (activities: IActivity[]) => {
+        const sortedActivities = activities.sort(
+            (a, b) => Date.parse(a.date) - Date.parse(b.date)
+        );
+        const groupActivitiesByDate= Object.entries(sortedActivities.reduce((activities, activity) => {
+            const date = activity.date.split("T")[0];
+
+            activities[date] = activities[date] ? [...activities[date], activity] : [activity];
+
+            return activities;
+
+        }, {} as { [key: string]: IActivity[] }));
+        return groupActivitiesByDate;
     }
     @action fetched = () => {
         this.submitting = true;
@@ -37,7 +53,7 @@ class ActivityStore {
 
             response.forEach((ac) => {
                 ac.date = ac.date.split(".")[0];
-                this.activitiesRegistered.set(ac.id,ac);
+                this.activitiesRegistered.set(ac.id, ac);
             });
 
         } catch (err) {
@@ -46,32 +62,32 @@ class ActivityStore {
             this.loadingInital = false;
         }
     }
-    @action loadActivity= async (id:string)=> {
+    @action loadActivity = async (id: string) => {
         let activity = this.getActivity(id);
-        if(activity ){
-            this.selectedActivity = activity ;
+        if (activity) {
+            this.selectedActivity = activity;
             return;
-        } 
+        }
         this.loadingInital = true;
         try {
             activity = await agent.Activities.details(id);
             this.selectedActivity = activity;
-        }catch(err){
+        } catch (err) {
             console.log(err);
-        }finally{
+        } finally {
             this.loadingInital = false;
         }
     }
-    getActivity=(id:string)=> {
+    getActivity = (id: string) => {
         return this.activitiesRegistered.get(id);
     }
     @action selectActivity = (id: string) => {
-        this.selectedActivity =this.activitiesRegistered.get(id); 
+        this.selectedActivity = this.activitiesRegistered.get(id);
     }
     @action createActivity = async (activity: IActivity) => {
         try {
             await agent.Activities.create(activity);
-            this.activitiesRegistered.set(activity.id,activity);
+            this.activitiesRegistered.set(activity.id, activity);
             this.submitting = false;
         }
         catch (e) {
@@ -101,7 +117,7 @@ class ActivityStore {
             .then(() => {
                 this.activities = [...this.activities.filter((activity) => activity.id !== id)];
                 if (this.selectedActivity && this.selectedActivity.id === id)
-                this.selectedActivity=null;
+                    this.selectedActivity = null;
             })
             .finally(() => {
                 this.deleteSubmiting = false;
@@ -110,11 +126,11 @@ class ActivityStore {
     }
 
     @action openCreateForm = () => {
-        this.selectedActivity=null;
+        this.selectedActivity = null;
     }
 
     @action cancelledHandler = () => {
-        this.selectedActivity=null;
+        this.selectedActivity = null;
     };
 
 }

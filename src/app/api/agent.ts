@@ -1,8 +1,29 @@
 import axios, { AxiosResponse } from 'axios';
+import { toast } from 'react-toastify';
+import { history } from '../..';
 import { IActivity } from "../models/activities";
 
 const baseURL = 'http://localhost:5000/api/';
 axios.defaults.baseURL = baseURL;
+
+axios.interceptors.response.use(undefined, error => {
+    if(error.message="Network Error" && !error.response){
+        toast.error("Network error: make shure api is running!");
+    }
+    const { status, config, data } = error.response;
+    console.log({status});
+    if (status === 500) {
+        toast.error("Server Is Error - check your terminal");
+        history.push("/activities");
+    }
+    else if (status === 404) {
+        history.push("/not-found");
+    }
+    else if (status === 400 && config.method === 'get' && data.errors.hasOwnProperty("id")) {
+        history.push("/not-found");
+    }
+
+});
 
 const responseBody = (response: AxiosResponse) => response.data;
 

@@ -9,7 +9,6 @@ interface IProps {
 }
 
 const ActvityListItem: React.FC<IProps> = ({ activitiy }) => {
-  console.log(activitiy);
   const activityStore = useContext(ActivityStore);
   const {
     deleteActivity: onDelete,

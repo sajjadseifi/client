@@ -14,7 +14,6 @@ interface DetailsParams {
 }
 const ActivityDetails: React.FC<RouteComponentProps<DetailsParams>> = ({
   match,
-  history,
 }) => {
   const activityStore = useContext(ActivityStore);
   const {
@@ -25,27 +24,31 @@ const ActivityDetails: React.FC<RouteComponentProps<DetailsParams>> = ({
   } = activityStore;
 
   useEffect(() => {
-    loadActivity(match.params.id);
+    if (match.params.id) loadActivity(match.params.id);
+
     return () => {
+      console.log("CLEARING");
       clearingActivity();
     };
   }, [loadActivity, match.params.id]);
 
-  if (loadingInital || !activity)
+  if (loadingInital)
     return <LoadingComponent content="Loading Details Activity" />;
+
+  if (!activity)
+    return <h1>Activity Not Found</h1>;
 
   return (
     <Grid>
       <Grid.Column width={10}>
-        <ActivityDetailsHeader  activity={activity}/>
-        <ActivityDetailsInfo  activity={activity} />
+        <ActivityDetailsHeader activity={activity} />
+        <ActivityDetailsInfo activity={activity} />
         <ActivityDetailsChat />
       </Grid.Column>
       <Grid.Column width={6}>
         <ActivityDetailsSidebar />
       </Grid.Column>
     </Grid>
-
   );
 };
 

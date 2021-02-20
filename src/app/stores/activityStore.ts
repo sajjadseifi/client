@@ -2,9 +2,7 @@ import { action, computed, makeObservable, observable } from 'mobx';
 import { createContext, SyntheticEvent } from 'react';
 import { IActivity } from '../models/activities';
 import * as agent from "../api/agent";
-interface IActivityKey {
-    [key: string]: IActivity[];
-}
+
 class ActivityStore {
     @observable title = "Home From Mobx";
     @observable errorMessage = "";
@@ -28,10 +26,10 @@ class ActivityStore {
     }
     groupActivitiesByDate = (activities: IActivity[]) => {
         const sortedActivities = activities.sort(
-            (a, b) => Date.parse(a.date) - Date.parse(b.date)
+            (a, b) => a.date!.getTime() - b.date!.getTime()
         );
         const groupActivitiesByDate= Object.entries(sortedActivities.reduce((activities, activity) => {
-            const date = activity.date.split("T")[0];
+            const date = activity.date!.toISOString();
 
             activities[date] = activities[date] ? [...activities[date], activity] : [activity];
 
@@ -52,7 +50,7 @@ class ActivityStore {
             this.loadingInital = false;
 
             response.forEach((ac) => {
-                ac.date = ac.date.split(".")[0];
+                ac.date = new Date(ac.date!);
                 this.activitiesRegistered.set(ac.id, ac);
             });
 
@@ -66,12 +64,14 @@ class ActivityStore {
         let activity = this.getActivity(id);
         if (activity) {
             this.selectedActivity = activity;
-            return;
+            return activity;
         }
         this.loadingInital = true;
         try {
             activity = await agent.Activities.details(id);
+            activity.date = new Date(activity.date); 
             this.selectedActivity = activity;
+            return activity;
         } catch (err) {
             console.log(err);
         } finally {

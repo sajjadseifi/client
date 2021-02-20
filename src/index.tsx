@@ -6,6 +6,7 @@ import reportWebVitals from "./reportWebVitals";
 import { Router } from "react-router-dom";
 import {createBrowserHistory} from "history";
 import ScrollToTop from "./app/layout/ScrollToTop";
+import 'react-widgets/dist/css/react-widgets.css';
 
 export const history = createBrowserHistory();
 

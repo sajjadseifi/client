@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 import { Button, Icon, Item, Label, Segment } from "semantic-ui-react";
@@ -32,7 +33,7 @@ const ActvityListItem: React.FC<IProps> = ({ activitiy }) => {
       </Segment>
 
       <Segment>
-        <Icon name="clock" /> {activitiy.date}
+        <Icon name="clock" /> {format( activitiy.date!,"h:mm a")}
         <Icon name="marker" /> {activitiy.venue} , {activitiy.city}
       </Segment>
       <Segment clearing secondary>
@@ -50,7 +51,7 @@ const ActvityListItem: React.FC<IProps> = ({ activitiy }) => {
             loading={activitiy.id === targets && deleteSubmiting}
             onClick={(e) => {
               deleteFetched();
-              onDelete(e, activitiy.id);
+              onDelete(e, activitiy.id!);
             }}
             floated="right"
             content="Delete"

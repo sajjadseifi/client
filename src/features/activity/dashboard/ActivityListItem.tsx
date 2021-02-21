@@ -3,14 +3,15 @@ import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 import { Button, Icon, Item, Label, Segment } from "semantic-ui-react";
 import { IActivity } from "../../../app/models/activities";
-import ActivityStore from "../../../app/stores/activityStore";
+import { RootStoreContext } from "../../../app/stores/rootStore";
 
 interface IProps {
   activitiy: IActivity;
 }
 
 const ActvityListItem: React.FC<IProps> = ({ activitiy }) => {
-  const activityStore = useContext(ActivityStore);
+  const activityStore = useContext(RootStoreContext).activityStore;
+  
   const {
     deleteActivity: onDelete,
     deleteFetched,

@@ -1,9 +1,16 @@
 import { action, computed, makeObservable, observable } from 'mobx';
-import { createContext, SyntheticEvent } from 'react';
+import {  SyntheticEvent } from 'react';
 import { IActivity } from '../models/activities';
 import * as agent from "../api/agent";
+import { RootStore } from './rootStore';
+import BaseStore from './baseStore';
 
-class ActivityStore {
+export default class ActivityStore extends BaseStore{
+    constructor(rootStore:RootStore) {
+        super(rootStore);
+        makeObservable(this);
+    }
+
     @observable title = "Home From Mobx";
     @observable errorMessage = "";
     @observable activitiesRegistered = new Map();
@@ -15,9 +22,6 @@ class ActivityStore {
     @observable targets = "";
 
 
-    constructor() {
-        makeObservable(this);
-    }
     @action clearingActivity = () => {
         this.selectedActivity = null;
     }
@@ -135,4 +139,4 @@ class ActivityStore {
 
 }
 
-export default createContext(new ActivityStore());
+// export default createContext(new ActivityStore());

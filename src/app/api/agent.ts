@@ -2,9 +2,20 @@ import axios, { AxiosResponse } from 'axios';
 import { toast } from 'react-toastify';
 import { history } from '../..';
 import { IActivity } from "../models/activities";
+import { IUser, IUserFormVlues } from '../models/user';
 
 const baseURL = 'http://localhost:5000/api/';
 axios.defaults.baseURL = baseURL;
+
+axios.interceptors.request.use((config) => {
+    const token = window.localStorage.getItem("jwt");
+    console.log({token});
+
+    if(token)
+        config.headers.Authorization = `Bearer ${token}`;
+
+    return config;
+});
 
 axios.interceptors.response.use(undefined, error => {
     if(error.message="Network Error" && !error.response){
@@ -22,7 +33,7 @@ axios.interceptors.response.use(undefined, error => {
     else if (status === 400 && config.method === 'get' && data.errors.hasOwnProperty("id")) {
         history.push("/not-found");
     }
-
+    throw error.response;
 });
 
 const responseBody = (response: AxiosResponse) => response.data;
@@ -45,6 +56,13 @@ const Activities = {
     delete: (id: string) => requests.del(`/activities/${id}`),
 };
 
+const User = {
+    current:():Promise<IUser> => requests.get("/user"),
+    login: (user: IUserFormVlues) => requests.post("/user/login",user),
+    register: (user: IUserFormVlues) => requests.post("/user/register",user),
+};
+
 export {
-    Activities
+    Activities,
+    User
 };

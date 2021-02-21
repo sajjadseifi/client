@@ -1,10 +1,9 @@
 import React, { useEffect, useContext } from "react";
 import "semantic-ui-css/semantic.min.css";
-import 'react-toastify/dist/ReactToastify.css';
+import "react-toastify/dist/ReactToastify.css";
 import NavBar from "../../features/nav/NavBar";
 import { Container } from "semantic-ui-react";
 import LoadingComponent from "./LoadingComponent";
-import ActivityStore from "../stores/activityStore";
 import { observer } from "mobx-react-lite";
 import ActivitiyDashboard from "../../features/activity/dashboard/ActivityDashboard";
 import {
@@ -18,20 +17,35 @@ import ActivityForm from "../../features/activity/form/ActivityForm";
 import ActivityDitales from "../../features/activity/details/ActivityDitales";
 import NotFound from "./NotFound";
 import { ToastContainer } from "react-toastify";
+import { RootStoreContext } from "../stores/rootStore";
+import LoginForm from "../../features/user/LoginForm";
+import ModalComponent from "../common/modals/ModalComponent";
 
 const App: React.FC<RouteComponentProps> = ({ location }) => {
-  const activityStore = useContext(ActivityStore);
+  const rootStore = useContext(RootStoreContext);
+  const { setAppLoaded, token, appLoaded } = rootStore.commonStore;
+  const { getUser } = rootStore.userStore;
 
   useEffect(() => {
-    activityStore.loadActivities();
-  }, [activityStore]);
+    const asyncLoad = async () => {
+      console.log("aaa");
+      try {
+        if (token) await getUser();
+      } finally {
+        console.log("bbb");
+        setAppLoaded();
+      }
+    };
 
-  if (activityStore.loadingInital)
-    return <LoadingComponent content={"Loading Activities..."} />;
+    asyncLoad();
+  }, [getUser, setAppLoaded, token]);
+
+  if (!appLoaded) return <LoadingComponent content={"Loading Activities..."} />;
 
   return (
     <>
-      <ToastContainer  position="bottom-right" />
+      <ToastContainer position="bottom-right" />
+      <ModalComponent />
       <Route exact path="/" component={HomePage} />
       <Route
         path={"/(.+)"}
@@ -51,6 +65,7 @@ const App: React.FC<RouteComponentProps> = ({ location }) => {
                   path={["/create-activities", "/manage/:id"]}
                   component={ActivityForm}
                 />
+                <Route path="/login" component={LoginForm} />
                 <Route component={NotFound} />
               </Switch>
             </Container>

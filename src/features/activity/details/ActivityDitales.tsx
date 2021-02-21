@@ -1,9 +1,9 @@
 import { observer } from "mobx-react";
 import React, { useContext, useEffect } from "react";
-import { Link, RouteComponentProps } from "react-router-dom";
-import { Button, Card, Grid, Image } from "semantic-ui-react";
+import {RouteComponentProps } from "react-router-dom";
+import { Grid } from "semantic-ui-react";
 import LoadingComponent from "../../../app/layout/LoadingComponent";
-import ActivityStore from "../../../app/stores/activityStore";
+import { RootStoreContext } from "../../../app/stores/rootStore";
 import ActivityDetailsChat from "./ActivityDetailsChat";
 import ActivityDetailsHeader from "./ActivityDetailsHeader";
 import ActivityDetailsInfo from "./ActivityDetailsInfo";
@@ -15,7 +15,7 @@ interface DetailsParams {
 const ActivityDetails: React.FC<RouteComponentProps<DetailsParams>> = ({
   match,
 }) => {
-  const activityStore = useContext(ActivityStore);
+  const activityStore = useContext(RootStoreContext).activityStore;
   const {
     selectedActivity: activity,
     loadActivity,

@@ -305,5 +305,21 @@
 		  ""
 		],
 		"description": "S_9.6.2"
+	  },
+	  "S_13.6.1": {
+		"prefix": "S_13.6.1",
+		"body": [
+		  "       <Menu.Item position='right'>",
+		  "          <Image avatar spaced='right' src={'/assets/user.png'} />",
+		  "          <Dropdown pointing='top left' text='user'>",
+		  "            <Dropdown.Menu>",
+		  "              <Dropdown.Item as={Link} to={`/profile/username`} text='My profile' icon='user'/>",
+		  "              <Dropdown.Item onClick={logout} text='Logout' icon='power' />",
+		  "            </Dropdown.Menu>",
+		  "          </Dropdown>",
+		  "        </Menu.Item>",
+		  ""
+		],
+		"description": "S_13.6.1"
 	  }
 }

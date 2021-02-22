@@ -1,12 +1,14 @@
 import { action, computed, makeObservable, observable } from 'mobx';
-import {  SyntheticEvent } from 'react';
+import { SyntheticEvent } from 'react';
 import { IActivity } from '../models/activities';
 import * as agent from "../api/agent";
 import { RootStore } from './rootStore';
 import BaseStore from './baseStore';
+import { createAttendees, setActivityProps } from '../common/utils/utils';
+import { history } from '../..';
 
-export default class ActivityStore extends BaseStore{
-    constructor(rootStore:RootStore) {
+export default class ActivityStore extends BaseStore {
+    constructor(rootStore: RootStore) {
         super(rootStore);
         makeObservable(this);
     }
@@ -20,7 +22,7 @@ export default class ActivityStore extends BaseStore{
     @observable submitting = false;
     @observable deleteSubmiting = false;
     @observable targets = "";
-
+    @observable loading = false;
 
     @action clearingActivity = () => {
         this.selectedActivity = null;
@@ -32,7 +34,7 @@ export default class ActivityStore extends BaseStore{
         const sortedActivities = activities.sort(
             (a, b) => a.date!.getTime() - b.date!.getTime()
         );
-        const groupActivitiesByDate= Object.entries(sortedActivities.reduce((activities, activity) => {
+        const groupActivitiesByDate = Object.entries(sortedActivities.reduce((activities, activity) => {
             const date = activity.date!.toISOString();
 
             activities[date] = activities[date] ? [...activities[date], activity] : [activity];
@@ -54,7 +56,7 @@ export default class ActivityStore extends BaseStore{
             this.loadingInital = false;
 
             response.forEach((ac) => {
-                ac.date = new Date(ac.date!);
+                setActivityProps(ac, this.rootStore.userStore.user!);
                 this.activitiesRegistered.set(ac.id, ac);
             });
 
@@ -73,7 +75,7 @@ export default class ActivityStore extends BaseStore{
         this.loadingInital = true;
         try {
             activity = await agent.Activities.details(id);
-            activity.date = new Date(activity.date); 
+            setActivityProps(activity, this.rootStore.userStore.user!);
             this.selectedActivity = activity;
             return activity;
         } catch (err) {
@@ -91,8 +93,14 @@ export default class ActivityStore extends BaseStore{
     @action createActivity = async (activity: IActivity) => {
         try {
             await agent.Activities.create(activity);
-            this.activitiesRegistered.set(activity.id, activity);
+            const attendee = await createAttendees(this.rootStore.userStore.user!);
+            activity.attendees =  [attendee];
+            attendee.isHost = true;
+            activity.isHost = true;
             this.submitting = false;
+            this.activitiesRegistered.set(activity.id, activity);
+            
+            history.push(`/activities/${activity.id}`);
         }
         catch (e) {
             this.submitting = false;
@@ -137,6 +145,55 @@ export default class ActivityStore extends BaseStore{
         this.selectedActivity = null;
     };
 
-}
+    @action attendActivity = async () => {
+        if (!this.selectedActivity)
+            return;
+        this.loading = true;
+        try {
+            await agent.Activities.attend(this.selectedActivity.id!);
 
-// export default createContext(new ActivityStore());
+            const attend = createAttendees(this.rootStore.userStore.user!);
+            this.selectedActivity.attendees.push(attend);
+            this.selectedActivity.isGoing = true;
+            this.activitiesRegistered.set(
+                this.selectedActivity.id, this.selectedActivity
+            );
+        } catch (error) {
+            console.log(error);
+            throw error;
+
+        } finally {
+            this.loading = false;
+        }
+
+    }
+
+    @action cancelAttendees = async () => {
+
+        if (this.rootStore.userStore.user == null || !this.selectedActivity) {
+            history.push("/login");
+            return;
+        }
+        this.loading = true;
+        try {
+            await agent.Activities.unattend(this.selectedActivity.id!);
+
+            this.selectedActivity.attendees = this.selectedActivity.attendees.filter((sa) => {
+                console.log(sa.userName, " --- ", this.rootStore.userStore.user?.userName, sa.userName !== this.rootStore.userStore.user?.userName);
+                return sa.userName !== this.rootStore.userStore.user?.userName
+            }
+            );
+            this.selectedActivity.isGoing = false;
+            this.activitiesRegistered.set(this.selectedActivity.id, this.selectedActivity);
+
+        } catch (error) {
+            console.log(error);
+            // throw error;
+
+        } finally {
+            this.loading = false;
+        }
+
+
+    }
+}

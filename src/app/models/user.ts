@@ -11,3 +11,11 @@ export interface IUserFormVlues{
     displayName?:string;
     userName?:string;
 }
+
+
+export interface IAttendee{
+    displayName:string;
+    userName:string;
+    image:string;
+    isHost:boolean;
+}

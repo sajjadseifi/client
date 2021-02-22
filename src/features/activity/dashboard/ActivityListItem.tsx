@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Button, Icon, Item, Label, Segment } from "semantic-ui-react";
 import { IActivity } from "../../../app/models/activities";
 import { RootStoreContext } from "../../../app/stores/rootStore";
+import ActivityListItemAttendees from "./ActivityListItemAttendees";
 
 interface IProps {
   activitiy: IActivity;
@@ -11,7 +12,7 @@ interface IProps {
 
 const ActvityListItem: React.FC<IProps> = ({ activitiy }) => {
   const activityStore = useContext(RootStoreContext).activityStore;
-  
+  const host = activitiy.attendees.filter((a) => a.isHost)[0];
   const {
     deleteActivity: onDelete,
     deleteFetched,
@@ -23,10 +24,30 @@ const ActvityListItem: React.FC<IProps> = ({ activitiy }) => {
       <Segment>
         <Item.Group>
           <Item key={activitiy.id}>
-          <Item.Image size="tiny" src="/assets/user.png" />
+            <Item.Image size="tiny" src="/assets/user.png" />
             <Item.Content>
-              <Item.Header as="a">{activitiy.title}</Item.Header>
-              <Item.Description>Hosted By Sajjad</Item.Description>
+              <Item.Header as={Link} to={`/activities/${activitiy.id}`}>
+                {activitiy.title}
+              </Item.Header>
+              <Item.Description>Hosted By {host.displayName}</Item.Description>
+              {activitiy.isHost && (
+                <Item.Description>
+                  <Label
+                    basic
+                    color={"orange"}
+                    content="You are hosting this activitiy"
+                  />
+                </Item.Description>
+              )}
+              {activitiy.isGoing && !activitiy.isHost && (
+                <Item.Description>
+                  <Label
+                    basic
+                    color={"green"}
+                    content="You are going this activitiy"
+                  />
+                </Item.Description>
+              )}
             </Item.Content>
           </Item>
         </Item.Group>
@@ -34,12 +55,14 @@ const ActvityListItem: React.FC<IProps> = ({ activitiy }) => {
       </Segment>
 
       <Segment>
-        <Icon name="clock" /> {format( activitiy.date!,"h:mm a")}
+        <Icon name="clock" /> {format(activitiy.date!, "h:mm a")}
         <Icon name="marker" /> {activitiy.venue} , {activitiy.city}
       </Segment>
       <Segment clearing secondary>
-          <span>Attendees Will Go Here</span>
-          <Item.Extra>
+        <Item>
+          <ActivityListItemAttendees attendees={activitiy.attendees} />
+        </Item>
+        <Item.Extra>
           <Button
             as={Link}
             to={`/activities/${activitiy.id}`}
@@ -62,7 +85,6 @@ const ActvityListItem: React.FC<IProps> = ({ activitiy }) => {
       </Segment>
       <Segment clearing>
         <span>{activitiy.description}</span>
-
       </Segment>
     </Segment.Group>
   );

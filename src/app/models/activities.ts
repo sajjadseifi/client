@@ -1,3 +1,5 @@
+import { IAttendee } from "./user";
+
 export interface IActivity{
     id: string | undefined;
     title: string;
@@ -6,6 +8,10 @@ export interface IActivity{
     category: string;
     date: Date | undefined;
     venue: string;
+    isGoing:boolean;
+    isHost:boolean;
+    attendees:IAttendee[];
+
 }
 
 export interface IActivityForms extends Partial<IActivity>{

@@ -6,7 +6,9 @@ import { RootStore } from './rootStore';
 import BaseStore from './baseStore';
 import { createAttendees, setActivityProps } from '../common/utils/utils';
 import { history } from '../..';
-
+import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
+import { error } from 'console';
+import { toast } from 'react-toastify';
 export default class ActivityStore extends BaseStore {
     constructor(rootStore: RootStore) {
         super(rootStore);
@@ -23,7 +25,47 @@ export default class ActivityStore extends BaseStore {
     @observable deleteSubmiting = false;
     @observable targets = "";
     @observable loading = false;
+    @observable hubConnections: HubConnection | null = null;
 
+
+    @action createHubConnection = (activityId: string) => {
+        this.hubConnections = new HubConnectionBuilder()
+            .withUrl("http://localhost:5000/chat", {
+                accessTokenFactory: () => this.rootStore.commonStore.token!
+            })
+            .configureLogging(LogLevel.Information)
+            .build();
+
+        this.hubConnections.start()
+            .then(() => console.log(this.hubConnections!.state))
+            .then(() => {
+                console.log("Attemptiong to join group");
+                this.hubConnections!.invoke("AddToGroup", activityId)
+            })
+            .catch(error => console.warn("Error establishing connection", error))
+
+        this.hubConnections.on("ReciveComment", comment => {
+            this.selectedActivity!.comments.push(comment);
+        });
+        this.hubConnections.on("Send", message => {
+            toast.info(message);
+        });
+    }
+    @action stopHubConnection = () => {
+        this.hubConnections!.invoke("RemoveToGroup",
+            this.selectedActivity!.id)
+            .then(() => this.hubConnections!.stop())
+            .then(() => console.log("Connection Stopped"))
+            .catch(err => console.log(err));
+    }
+    @action addComment = async (value: any) => {
+        value.activityId = this.selectedActivity!.id;
+        try {
+            await this.hubConnections!.invoke("SendComment", value);
+        } catch (error) {
+            console.log(error);
+        }
+    }
     @action clearingActivity = () => {
         this.selectedActivity = null;
     }
@@ -94,12 +136,13 @@ export default class ActivityStore extends BaseStore {
         try {
             await agent.Activities.create(activity);
             const attendee = await createAttendees(this.rootStore.userStore.user!);
-            activity.attendees =  [attendee];
+            activity.attendees = [attendee];
             attendee.isHost = true;
             activity.isHost = true;
+            activity.comments = [];
             this.submitting = false;
             this.activitiesRegistered.set(activity.id, activity);
-            
+
             history.push(`/activities/${activity.id}`);
         }
         catch (e) {

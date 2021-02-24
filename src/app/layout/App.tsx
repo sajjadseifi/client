@@ -20,6 +20,7 @@ import { ToastContainer } from "react-toastify";
 import { RootStoreContext } from "../stores/rootStore";
 import LoginForm from "../../features/user/LoginForm";
 import ModalComponent from "../common/modals/ModalComponent";
+import ProfilePage from "../../features/profiles/ProfilePage";
 
 const App: React.FC<RouteComponentProps> = ({ location }) => {
   const rootStore = useContext(RootStoreContext);
@@ -65,6 +66,8 @@ const App: React.FC<RouteComponentProps> = ({ location }) => {
                   path={["/create-activities", "/manage/:id"]}
                   component={ActivityForm}
                 />
+                
+                <Route path="/profile/:username" component={ProfilePage} />
                 <Route path="/login" component={LoginForm} />
                 <Route component={NotFound} />
               </Switch>

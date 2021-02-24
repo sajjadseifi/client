@@ -2,6 +2,7 @@ import axios, { AxiosResponse } from 'axios';
 import { toast } from 'react-toastify';
 import { history } from '../..';
 import { IActivity } from "../models/activities";
+import { IPhoto, IProfile } from '../models/profile';
 import { IUser, IUserFormVlues } from '../models/user';
 
 const baseURL = 'http://localhost:5000/api/';
@@ -9,20 +10,20 @@ axios.defaults.baseURL = baseURL;
 
 axios.interceptors.request.use((config) => {
     const token = window.localStorage.getItem("jwt");
-    console.log({token});
+    console.log({ token });
 
-    if(token)
+    if (token)
         config.headers.Authorization = `Bearer ${token}`;
 
     return config;
 });
 
 axios.interceptors.response.use(undefined, error => {
-    if(error.message="Network Error" && !error.response){
+    if (error.message = "Network Error" && !error.response) {
         toast.error("Network error: make shure api is running!");
     }
     const { status, config, data } = error.response;
-    console.log({status});
+    console.log({ status });
     if (status === 500) {
         toast.error("Server Is Error - check your terminal");
         history.push("/activities");
@@ -47,7 +48,20 @@ const requests = {
     post: (url: string, body: {}) => axios.post(url, body).then(sleep(1000)).then(responseBody),
     put: (url: string, body: {}) => axios.put(url, body).then(sleep(1000)).then(responseBody),
     del: (url: string) => axios.delete(url).then(sleep(1000)).then(responseBody),
+    postForm: (url: string, blob: Blob) => {
+        const formData = new FormData();
+        formData.append("File", blob);
+        const config = {
+            headers: {
+                "Content-Type": "multipart/form-data",
+                'Accept': 'application/json',
+            },
+            mode: 'cors',
+        };
+        return axios.post(url, formData, config).then(responseBody);
+    }
 };
+
 const Activities = {
     list: (): Promise<IActivity[]> => requests.get("/activities"),
     details: (id: string) => requests.get(`/activities/${id}`),
@@ -57,14 +71,20 @@ const Activities = {
     attend: (id: string) => requests.put(`/activities/${id}/attend`, {}),
     unattend: (id: string) => requests.del(`/activities/${id}/unattend`),
 };
-
 const User = {
-    current:():Promise<IUser> => requests.get("/user"),
-    login: (user: IUserFormVlues) => requests.post("/user/login",user),
-    register: (user: IUserFormVlues) => requests.post("/user/register",user),
+    current: (): Promise<IUser> => requests.get("/user"),
+    login: (user: IUserFormVlues) => requests.post("/user/login", user),
+    register: (user: IUserFormVlues) => requests.post("/user/register", user),
 };
-
+const Profile = {
+    get: (username: string): Promise<IProfile> => requests.get(`/profiles/${username}`),
+    uploadPhoto: (photo: Blob): Promise<IPhoto> => requests.post("/photos", photo),
+    setMainPhoto: (id: string) => requests.post(`/photos/${id}/setmain`, {}),
+    deletePhoto: (id: string) => requests.del(`/photos/${id}`),
+    updateProfile: (profile: Partial<IProfile>) => requests.put("/profiles", profile)
+};
 export {
     Activities,
-    User
+    User,
+    Profile
 };

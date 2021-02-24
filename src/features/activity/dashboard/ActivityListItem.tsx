@@ -11,7 +11,8 @@ interface IProps {
 }
 
 const ActvityListItem: React.FC<IProps> = ({ activitiy }) => {
-  const activityStore = useContext(RootStoreContext).activityStore;
+  const rootStore = useContext(RootStoreContext);
+  const activityStore = rootStore.activityStore;
   const host = activitiy.attendees.filter((a) => a.isHost)[0];
   const {
     deleteActivity: onDelete,
@@ -24,12 +25,18 @@ const ActvityListItem: React.FC<IProps> = ({ activitiy }) => {
       <Segment>
         <Item.Group>
           <Item key={activitiy.id}>
-            <Item.Image size="tiny" src="/assets/user.png" />
+            <Item.Image size="tiny" src={host.image || "/assets/user.png"} />
             <Item.Content>
               <Item.Header as={Link} to={`/activities/${activitiy.id}`}>
                 {activitiy.title}
               </Item.Header>
-              <Item.Description>Hosted By {host.displayName}</Item.Description>
+              <Item.Description>
+                Hosted By
+                <Link to={`/profile/${host.userName}`}>
+                  {" "}
+                  {host.displayName}
+                </Link>
+              </Item.Description>
               {activitiy.isHost && (
                 <Item.Description>
                   <Label

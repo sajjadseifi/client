@@ -1,3 +1,4 @@
+import { observer } from "mobx-react";
 import React, { useContext } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Button, Container, Dropdown, Image, Menu } from "semantic-ui-react";
@@ -27,12 +28,12 @@ const NavBar: React.FC = () => {
         </Menu.Item>
         {user && (
           <Menu.Item position="right">
-            <Image avatar spaced="right" src={"/assets/user.png"} />
-            <Dropdown pointing="top left" text={user.userName}>
+            <Image avatar spaced="right" src={user.image||"/assets/user.png"} />
+            <Dropdown pointing="top left" text={user.displayName}>
               <Dropdown.Menu>
                 <Dropdown.Item
                   as={Link}
-                  to={user.image || `/profile/username`}
+                  to={`/profile/${user.userName}`}
                   text="My profile"
                   icon="user"
                 />
@@ -46,4 +47,4 @@ const NavBar: React.FC = () => {
   );
 };
 
-export default NavBar;
+export default observer(NavBar);

@@ -1,4 +1,4 @@
-import { action, computed, makeObservable, observable } from 'mobx';
+import { action, computed, makeObservable, observable, reaction } from 'mobx';
 import { SyntheticEvent } from 'react';
 import { IActivity } from '../models/activities';
 import * as agent from "../api/agent";
@@ -7,12 +7,22 @@ import BaseStore from './baseStore';
 import { createAttendees, setActivityProps } from '../common/utils/utils';
 import { history } from '../..';
 import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
-import { error } from 'console';
 import { toast } from 'react-toastify';
+
+const LIMIT = 2;
+
 export default class ActivityStore extends BaseStore {
     constructor(rootStore: RootStore) {
         super(rootStore);
         makeObservable(this);
+        reaction(
+            () => this.predicate.keys(),
+            () => {
+                this.page =0;
+                this.activitiesRegistered.clear();
+                this.loadActivities();
+            }
+        );
     }
 
     @observable title = "Home From Mobx";
@@ -26,8 +36,34 @@ export default class ActivityStore extends BaseStore {
     @observable targets = "";
     @observable loading = false;
     @observable hubConnections: HubConnection | null = null;
+    @observable activitiesCount: number = 0;
+    @observable page: number = 0;
+    @observable predicate = new Map();
+    
+    @action setPredicate = (predicate: string, value: string | Date) => {
+        this.predicate.clear();
+        if (predicate !== "all")
+            this.predicate.set(predicate, value);
+    };
+    @computed get axtiosParams() {
+        const params = new URLSearchParams();
+        params.append("limit", String(LIMIT));
+        params.append("offset", `${this.page ? this.page * LIMIT : 0}`);
+        this.predicate.forEach((value, key) => {
+            let val = value;
+            if (key == "startDate")
+                val = val.toISOString();
 
-
+            params.append(key, val);
+        });
+        return params;
+    }
+    @computed get totalPages(): number {
+        return Math.ceil(this.activitiesCount / LIMIT);
+    }
+    @action setPage = (page: number) => {
+        this.page = page;
+    }
     @action createHubConnection = (activityId: string) => {
         this.hubConnections = new HubConnectionBuilder()
             .withUrl("http://localhost:5000/chat", {
@@ -52,7 +88,7 @@ export default class ActivityStore extends BaseStore {
         });
     }
     @action stopHubConnection = (activityId: string) => {
-        this.hubConnections!.invoke("RemoveToGroup",activityId)
+        this.hubConnections!.invoke("RemoveToGroup", activityId)
             .then(() => this.hubConnections!.stop())
             .then(() => console.log("Connection Stopped"))
             .catch(err => console.log(err));
@@ -93,10 +129,10 @@ export default class ActivityStore extends BaseStore {
         this.loadingInital = true;
         this.activities = [];
         try {
-            const response = await agent.Activities.list();
-            this.loadingInital = false;
-
-            response.forEach((ac) => {
+            const response = await agent.Activities.list(this.axtiosParams);
+            const { activities, activitiesCount, activitiesLoadedCount } = response;
+            this.activitiesCount = activitiesCount;
+            activities.forEach((ac) => {
                 setActivityProps(ac, this.rootStore.userStore.user!);
                 this.activitiesRegistered.set(ac.id, ac);
             });

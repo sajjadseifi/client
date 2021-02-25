@@ -3,9 +3,9 @@ import { IPhoto, IProfile } from "../models/profile";
 import BaseStore from "./baseStore";
 import * as agent from "../api/agent";
 import { toast } from "react-toastify";
-import { RootStore } from "./rootStore";
+import { IUserActivity } from "../models/user";
 
-export default class ProfileStore {
+export default class ProfileStore extends BaseStore {
 
     @observable profile: IProfile | null = null;
     @observable followings: IProfile[] = [];
@@ -16,18 +16,9 @@ export default class ProfileStore {
     @observable loadingFollow: boolean = false;
     @observable loadingContent: boolean = false;
     @observable activeTab: number = 0;
-    constructor(public rootStore: RootStore) {
-        // makeAutoObservable(this);
-        // reaction(() => this.activeTab, activeTab => {
-        //     if (activeTab == 3 || activeTab == 4) {
-        //         const predicate = activeTab == 3 ?
-        //             "followrs" : "following";
-        //         this.loadFollowings(predicate);
-        //     } else {
-        //         this.followings=[];
-        //     }
-        // });
-    }
+    @observable userActivities: IUserActivity[] = [];
+    @observable loadingUserActivities: boolean = false;
+
     @action setActiveTab = (activeIndex: number) => {
         this.activeTab = activeIndex;
         if (activeIndex == 3 || activeIndex == 4) {
@@ -49,7 +40,18 @@ export default class ProfileStore {
         }
         else
             return false;
-    };
+    }
+    @action loadUserActivities = async (userName: string, predicate?: string) => {
+        this.loadingUserActivities = true;
+        try {
+            const activities = await agent.Profile.listActivities(userName, predicate!);
+            this.userActivities = activities;
+        } catch (error) {
+            toast.error("Problem loading activities");
+        } finally {
+            this.loadingUserActivities = false;
+        }
+    }
     @action loadProfile = async (username: string) => {
         this.loadingProfile = true;
         try {

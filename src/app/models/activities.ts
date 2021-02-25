@@ -1,5 +1,11 @@
 import { IAttendee } from "./user";
 
+export interface IActivityEnvelope{
+     activities :IActivity[];
+     activitiesCount :number;
+     activitiesLoadedCount :number;
+}
+
 export interface IActivity {
     id: string | undefined;
     title: string;

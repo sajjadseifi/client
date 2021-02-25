@@ -1,23 +1,63 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { observer } from "mobx-react";
-import { Grid } from "semantic-ui-react";
+import { Button, Grid, Loader } from "semantic-ui-react";
 import ActivitiyList from "./ActivityList";
 import { RootStoreContext } from "../../../app/stores/rootStore";
-
-
+import LoadingComponent from "../../../app/layout/LoadingComponent";
+import InfiniteScroll from "react-infinite-scroller";
+import ActivityFilters from "./ActivityFilters";
 const ActivitiyDashboard: React.FC = ({}) => {
-  const activityStore = useContext(RootStoreContext).activityStore;
+  const rootStore = useContext(RootStoreContext);
+  const {
+    loadActivities,
+    loadingInital,
+    page,
+    setPage,
+    totalPages,
+  } = rootStore.activityStore;
+
+  const [loadginNext, setLoadingNext] = useState(false);
+
+  const handleGetNext = () => {
+    setLoadingNext(true);
+    setPage(page + 1);
+    loadActivities().then(() => setLoadingNext(false));
+  };
 
   useEffect(() => {
-    activityStore.loadActivities();
-  }, [activityStore]);
+    loadActivities();
+  }, [loadActivities]);
+
+  if (loadingInital && page === 0)
+    return <LoadingComponent content="Loading Activites..." />;
+
   return (
     <Grid>
       <Grid.Column width={10}>
-        <ActivitiyList/>
+        <InfiniteScroll
+          pageStart={0}
+          loadMore={handleGetNext}
+          hasMore={!loadginNext && page + 1 < totalPages}
+          initialLoad={false}
+        >
+          <ActivitiyList />
+        </InfiniteScroll>
+        {/* <Button
+          floated="right"
+          positive
+          content="More..."
+          loading={loadginNext}
+          disabled={totalPages == page + 1}
+          onClick={handleGetNext}
+        /> */}
       </Grid.Column>
       <Grid.Column width={6}>
-        <h3>Activitiy Filter</h3>
+        <ActivityFilters/>
+      </Grid.Column>
+      <Grid.Column width={10}>
+        <div style={{ marginBottom: loadginNext ? 40 : 0 }}>
+          <Loader active={loadginNext} color="red" />
+        </div>
       </Grid.Column>
     </Grid>
   );

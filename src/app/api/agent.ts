@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 import { toast } from 'react-toastify';
 import { history } from '../..';
-import { IActivity } from "../models/activities";
+import { IActivity, IActivityEnvelope } from "../models/activities";
 import { IPhoto, IProfile } from '../models/profile';
 import { IUser, IUserFormVlues } from '../models/user';
 
@@ -63,7 +63,8 @@ const requests = {
 };
 
 const Activities = {
-    list: (): Promise<IActivity[]> => requests.get("/activities"),
+    list: (params: URLSearchParams): Promise<IActivityEnvelope> =>
+        axios.get(`/activities`, { params }).then(sleep(1000)).then(responseBody),
     details: (id: string) => requests.get(`/activities/${id}`),
     create: (activity: IActivity) => requests.post("/activities", activity),
     update: (activity: IActivity) => requests.put(`/activities/${activity.id}`, activity),
@@ -85,7 +86,9 @@ const Profile = {
     follow: (username: string) => requests.post(`/profiles/${username}/follow`, {}),
     unfollow: (username: string) => requests.del(`/profiles/${username}/follow`),
     listFolloings: (username: string, predicate: string) => requests
-        .get(`/profiles/${username}/follow?predicate=${predicate}`)
+        .get(`/profiles/${username}/follow?predicate=${predicate}`),
+    listActivities: (username: string, predicate: string) => requests
+        .get(`/profiles/${username}/activities?predicate=${predicate}`)
 };
 export {
     Activities,

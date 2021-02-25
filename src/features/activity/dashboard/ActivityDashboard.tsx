@@ -6,6 +6,7 @@ import { RootStoreContext } from "../../../app/stores/rootStore";
 import LoadingComponent from "../../../app/layout/LoadingComponent";
 import InfiniteScroll from "react-infinite-scroller";
 import ActivityFilters from "./ActivityFilters";
+import ActivityListItemPlaceholder from "./ActivityListItemPlaceholder ";
 const ActivitiyDashboard: React.FC = ({}) => {
   const rootStore = useContext(RootStoreContext);
   const {
@@ -28,31 +29,24 @@ const ActivitiyDashboard: React.FC = ({}) => {
     loadActivities();
   }, [loadActivities]);
 
-  if (loadingInital && page === 0)
-    return <LoadingComponent content="Loading Activites..." />;
-
   return (
     <Grid>
       <Grid.Column width={10}>
-        <InfiniteScroll
-          pageStart={0}
-          loadMore={handleGetNext}
-          hasMore={!loadginNext && page + 1 < totalPages}
-          initialLoad={false}
-        >
-          <ActivitiyList />
-        </InfiniteScroll>
-        {/* <Button
-          floated="right"
-          positive
-          content="More..."
-          loading={loadginNext}
-          disabled={totalPages == page + 1}
-          onClick={handleGetNext}
-        /> */}
+        {loadingInital && page === 0 ? (
+          <ActivityListItemPlaceholder />
+        ) : (
+          <InfiniteScroll
+            pageStart={0}
+            loadMore={handleGetNext}
+            hasMore={!loadginNext && page + 1 < totalPages}
+            initialLoad={false}
+          >
+            <ActivitiyList />
+          </InfiniteScroll>
+        )}
       </Grid.Column>
       <Grid.Column width={6}>
-        <ActivityFilters/>
+        <ActivityFilters />
       </Grid.Column>
       <Grid.Column width={10}>
         <div style={{ marginBottom: loadginNext ? 40 : 0 }}>

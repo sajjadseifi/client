@@ -5,7 +5,7 @@ import { IActivity, IActivityEnvelope } from "../models/activities";
 import { IPhoto, IProfile } from '../models/profile';
 import { IUser, IUserFormVlues } from '../models/user';
 
-const baseURL = 'http://localhost:5000/api/';
+const baseURL = process.env.REACT_APP_API_URL;
 axios.defaults.baseURL = baseURL;
 
 axios.interceptors.request.use((config) => {
@@ -17,12 +17,13 @@ axios.interceptors.request.use((config) => {
 
     return config;
 });
-
+const expiredTokenTextResp = `Bearer error="invalid_token", error_description="The token expired at`
 axios.interceptors.response.use(undefined, error => {
     if (error.message = "Network Error" && !error.response) {
         toast.error("Network error: make shure api is running!");
     }
-    const { status, config, data } = error.response;
+    const { status, config, data, headers } = error.response;
+
     console.log({ status });
     if (status === 500) {
         toast.error("Server Is Error - check your terminal");
@@ -34,20 +35,25 @@ axios.interceptors.response.use(undefined, error => {
     else if (status === 400 && config.method === 'get' && data.errors.hasOwnProperty("id")) {
         history.push("/not-found");
     }
+    else if (status == 401 && String(headers["www-authenticate"]).includes(expiredTokenTextResp)) {
+        window.localStorage.removeItem("jwt");
+        history.push("/");
+        toast.info("Your session has expired please login again");
+    }
     throw error.response;
 });
 
 const responseBody = (response: AxiosResponse) => response.data;
 
-const sleep = (ms: number) => (response: AxiosResponse) => new Promise<AxiosResponse>(
-    (resolve, reject) => setTimeout(() => resolve(response), ms)
-)
+// const sleep = (ms: number) => (response: AxiosResponse) => new Promise<AxiosResponse>(
+//     (resolve, reject) => setTimeout(() => resolve(response), ms)
+// )
 
 const requests = {
-    get: (url: string) => axios.get(url).then(sleep(1000)).then(responseBody),
-    post: (url: string, body: {}) => axios.post(url, body).then(sleep(1000)).then(responseBody),
-    put: (url: string, body: {}) => axios.put(url, body).then(sleep(1000)).then(responseBody),
-    del: (url: string) => axios.delete(url).then(sleep(1000)).then(responseBody),
+    get: (url: string) => axios.get(url).then(responseBody),
+    post: (url: string, body: {}) => axios.post(url, body).then(responseBody),
+    put: (url: string, body: {}) => axios.put(url, body).then(responseBody),
+    del: (url: string) => axios.delete(url).then(responseBody),
     postForm: (url: string, blob: Blob) => {
         const formData = new FormData();
         formData.append("File", blob);
@@ -64,7 +70,7 @@ const requests = {
 
 const Activities = {
     list: (params: URLSearchParams): Promise<IActivityEnvelope> =>
-        axios.get(`/activities`, { params }).then(sleep(1000)).then(responseBody),
+        axios.get(`/activities`, { params }).then(responseBody),
     details: (id: string) => requests.get(`/activities/${id}`),
     create: (activity: IActivity) => requests.post("/activities", activity),
     update: (activity: IActivity) => requests.put(`/activities/${activity.id}`, activity),

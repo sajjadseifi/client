@@ -1,6 +1,4 @@
 import React, { useEffect, useContext } from "react";
-import "semantic-ui-css/semantic.min.css";
-import "react-toastify/dist/ReactToastify.css";
 import NavBar from "../../features/nav/NavBar";
 import { Container } from "semantic-ui-react";
 import LoadingComponent from "./LoadingComponent";
@@ -21,6 +19,7 @@ import { RootStoreContext } from "../stores/rootStore";
 import LoginForm from "../../features/user/LoginForm";
 import ModalComponent from "../common/modals/ModalComponent";
 import ProfilePage from "../../features/profiles/ProfilePage";
+import PrivateRoute from "./PrivateRoute";
 
 const App: React.FC<RouteComponentProps> = ({ location }) => {
   const rootStore = useContext(RootStoreContext);
@@ -55,13 +54,13 @@ const App: React.FC<RouteComponentProps> = ({ location }) => {
             <NavBar />
             <Container style={{ marginTop: "7em" }}>
               <Switch>
-                <Route
+                <PrivateRoute
                   exact
                   path="/activities"
                   component={ActivitiyDashboard}
                 />
-                <Route path="/activities/:id" component={ActivityDitales} />
-                <Route
+                <PrivateRoute path="/activities/:id" component={ActivityDitales} />
+                <PrivateRoute
                   key={location.key}
                   path={["/create-activities", "/manage/:id"]}
                   component={ActivityForm}

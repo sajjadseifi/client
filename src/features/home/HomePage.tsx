@@ -8,6 +8,7 @@ import RegisterForm from "../user/RegisterForm";
 const HomePage = () => {
   const rootStore = useContext(RootStoreContext);
   const { isLoggedIn, user } = rootStore.userStore;
+  const { token } = rootStore.commonStore;
   const { Open } = rootStore.modalStore;
   return (
     <Segment inverted textAlign="center" vertical className="masthead">
@@ -21,7 +22,7 @@ const HomePage = () => {
           />
           Reactivities
         </Header>
-        {isLoggedIn && user ? (
+        {isLoggedIn && user && token ? (
           <>
             <Header as="h2" inverted content="Welcome to Reactivities" />
             <Button as={Link} to="/activities" size="huge" inverted>

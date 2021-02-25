@@ -8,7 +8,6 @@ export default class CommonStore extends BaseStore {
         super(rootStore);
 
         reaction(() => this.token, token => {
-            console.log("token : = : ", { token });
             if (token)
                 window.localStorage.setItem("jwt", token!);
             else

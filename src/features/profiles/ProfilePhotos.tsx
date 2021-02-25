@@ -14,6 +14,7 @@ const ProfilePhotos = () => {
     loadingSetMain,
     setMainPhoto,
     deletePhoto,
+    setActiveTab,
     loadingDelete
   } = rootStore.profileStore;
   const [addPhotoMoe, setAddPhotoMode] = useState(false);

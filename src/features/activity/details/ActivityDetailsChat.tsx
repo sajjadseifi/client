@@ -17,7 +17,7 @@ const ActivityDetailsChat = () => {
 
   useEffect(() => {
     createHubConnection(activity!.id!);
-    return () => stopHubConnection();
+    return () => stopHubConnection(activity!.id!);
   }, []);
   return (
     <Fragment>

@@ -51,9 +51,8 @@ export default class ActivityStore extends BaseStore {
             toast.info(message);
         });
     }
-    @action stopHubConnection = () => {
-        this.hubConnections!.invoke("RemoveToGroup",
-            this.selectedActivity!.id)
+    @action stopHubConnection = (activityId: string) => {
+        this.hubConnections!.invoke("RemoveToGroup",activityId)
             .then(() => this.hubConnections!.stop())
             .then(() => console.log("Connection Stopped"))
             .catch(err => console.log(err));

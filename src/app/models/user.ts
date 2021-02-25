@@ -18,4 +18,5 @@ export interface IAttendee{
     userName:string;
     image:string;
     isHost:boolean;
+    following?:boolean;   
 }

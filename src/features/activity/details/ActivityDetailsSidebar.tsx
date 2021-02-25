@@ -21,9 +21,12 @@ const ActivityDetailsSidebar: React.FC<IProps> = ({ attendees }) => {
       </Segment>
       <Segment attached>
         <List relaxed divided>
-          {attendees.map((attendee,index) => {
+          {attendees.map((attendee, index) => {
             return (
-              <Item key={attendee.userName+"-"+index} style={{ position: "relative" }}>
+              <Item
+                key={attendee.userName + "-" + index}
+                style={{ position: "relative" }}
+              >
                 {attendee.isHost && (
                   <Label
                     style={{ position: "absolute" }}
@@ -40,7 +43,11 @@ const ActivityDetailsSidebar: React.FC<IProps> = ({ attendees }) => {
                       {attendee.displayName}
                     </Link>
                   </Item.Header>
-                  <Item.Extra style={{ color: "orange" }}>Following</Item.Extra>
+                  {attendee.following && (
+                    <Item.Extra style={{ color: "orange" }}>
+                      Following
+                    </Item.Extra>
+                  )}
                 </Item.Content>
               </Item>
             );
